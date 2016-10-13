@@ -22,6 +22,7 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -31,15 +32,17 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener ,AdapterView.OnItemSelectedListener{
+    private static final String TAG = "MainActivity";
     EditText msg;
     Button send;
    Spinner sp;
 
     String monumber1;
-    String[] group = { "group1", "group2", "group3", "group3", "group5","group6"  };
-    ArrayList<String> mo =new ArrayList<String>();
+    //String[] group = { "group1", "group2", "group3", "group3", "group5","group6"  };
+    ArrayList<String> groups ;
 
 
 
@@ -68,19 +71,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
             try{
-                JSONArray ja=new JSONArray(s);
+                Log.i(TAG,s);
+                JSONObject jsonObject=new JSONObject(s);
+                JSONArray jsonArray=jsonObject.getJSONArray("Groups");
+                Log.i(TAG,"Json array"+jsonArray.toString());
+                Log.i(TAG," length=="+jsonArray.length());
+
+                int i=0;
+
+                String l1=jsonArray.getString(0);
+                    groups.add(i++,l1);
+                    String l2=jsonArray.getString(1);
+                    groups.add(i++,l2);
+                    String l3=jsonArray.getString(2);
+                    groups.add(i++,l3);
+                    String l4=jsonArray.getString(3);
+                    groups.add(i++,l4);
+                    String l5=jsonArray.getString(4);
+                    groups.add(i++,l5);
 
 
-                String one=ja.optString(0);
-                String two=ja.optString(1);
-                String three=ja.optString(2);
-                String four=ja.optString(3);
-                String five=ja.optString(4);
-                mo.add(0,one);
-                mo.add(1,two);
-                mo.add(2,three);
-                mo.add(3,four);
-                mo.add(4,five);
+
+
+
 
             }
             catch (Exception e){
@@ -95,16 +108,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         StrictMode.setThreadPolicy(policy);
         setContentView(R.layout.activity_main);
+        groups =new ArrayList<String>();
         sp= (Spinner) findViewById(R.id.spinner);
         sp.setOnItemSelectedListener(this);
         MyTask mt=new MyTask();
-        mt.execute("http://192.168.0.112/userdata/");
+        mt.execute("http://192.168.0.112:8000/userdata/");
 
 
 
         msg = (EditText) findViewById(R.id.editText);
         send= (Button) findViewById(R.id.send);
-        ArrayAdapter aa = new ArrayAdapter(this,android.R.layout.simple_spinner_item,mo);
+        ArrayAdapter aa = new ArrayAdapter(this,android.R.layout.simple_spinner_item,groups);
         aa.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         //Setting the ArrayAdapter data on the Spinner
         sp.setAdapter(aa);
@@ -112,7 +126,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
     @Override
     public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-        Toast.makeText(getApplicationContext(),group[i],Toast.LENGTH_LONG).show();
+        Toast.makeText(getApplicationContext(),i,Toast.LENGTH_LONG).show();
     }
 
     @Override
@@ -165,7 +179,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
  int i;
         for( i=0;i<1;i++) {
             String authkey = "124423Af7WzIdBB7m57cbda85";
-            String mobiles = mo.get(i);
+            //String mobiles = mo.get(i);
             String senderId = "12345678";
             String message = msg.getText().toString();
             String route = "default";
@@ -176,7 +190,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             String mainUrl = "https://control.msg91.com/api/sendhttp.php?";
             StringBuilder sbPostData = new StringBuilder(mainUrl);
             sbPostData.append("authkey=" + authkey);
-            sbPostData.append("&mobiles=" + mobiles);
+           // sbPostData.append("&mobiles=" + mobiles);
             sbPostData.append("&message=" + encoded_message);
             sbPostData.append("&route=" + route);
             sbPostData.append("&sender=" + senderId);
