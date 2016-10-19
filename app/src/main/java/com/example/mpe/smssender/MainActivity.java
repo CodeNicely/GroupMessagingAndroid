@@ -1,5 +1,6 @@
 package com.example.mpe.smssender;
 
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
@@ -12,10 +13,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
-
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -23,47 +22,37 @@ import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, AdapterView.OnItemSelectedListener {
     private static final String TAG = "MainActivity";
     EditText msg;
     Button send;
-    Spinner sp;
+    Spinner spinner;
     String groupid;
     String monumber1;
+    String spinnervalue;
+    String data;
     ArrayList<String> groups;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        setContentView(R.layout.activity_main);
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
 
         StrictMode.setThreadPolicy(policy);
-        setContentView(R.layout.activity_main);
         groups = new ArrayList<String>();
         MyTask mt = new MyTask();
         mt.execute("http://192.168.0.112:8000/userdata/");
 
-        sp = (Spinner) findViewById(R.id.spinner);
-        ArrayAdapter aa = new ArrayAdapter(this, android.R.layout.simple_spinner_item, groups);
+        this.spinner = (Spinner) findViewById(R.id.myspinner);
+        ArrayAdapter<String> aa = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, groups);
         aa.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        sp.setAdapter(aa);
-        /*sp.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
-        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-            Toast.makeText(parent.getContext(), "onItemSelected", Toast.LENGTH_SHORT).show();
-            Log.d("Console", "item selected");
-            groupid=sp.getSelectedItem().toString();
-            Log.i(TAG,groupid);
-        }
+        spinner.setAdapter(aa);
+        spinner.setOnItemSelectedListener(this);
 
-
-        public void onNothingSelected(AdapterView<?> parent) {
-            Log.d("Console", "nothing selected");
-        }
-    });*/
         msg = (EditText) findViewById(R.id.editText);
         send = (Button) findViewById(R.id.send);
 
@@ -80,7 +69,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 e.printStackTrace();
             }
 
-            Toast.makeText(MainActivity.this, "Message Sent Succesfully.. ", Toast.LENGTH_LONG).show();
+            Toast.makeText(MainActivity.this,"Sucessfully sent", Toast.LENGTH_LONG).show();
+
             msg.setText(" ");
             msg.setHint("Enter your msg here..");
         }
@@ -89,26 +79,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void smsapi() throws UnsupportedEncodingException {
 //        groupid=  sp.getSelectedItem().toString();
-        groupid = String.valueOf(sp.getSelectedItem());
+        groupid = String.valueOf(spinner.getSelectedItem());
+
+        Log.i(TAG,groupid);
+        Log.i(TAG,String.valueOf(spinner.getSelectedItemPosition()));
+
+       // Log.i(TAG,spinnervalue);
+        //Log.i(TAG,spinner.getSelectedView().toString());
 
       //  groupid = "2";
         String data = URLEncoder.encode("groupid", "UTF-8")
                 + "=" + URLEncoder.encode(groupid, "UTF-8");
-
+        data += "&" + URLEncoder.encode("textmsg", "UTF-8") + "="
+                + URLEncoder.encode(msg.getText().toString(), "UTF-8");
         String text = "";
         BufferedReader reader = null;
-
-        // Send data
         try {
             URL url = new URL("http://192.168.0.112:8000/Requestes/");
 
+
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
             conn.setReadTimeout(15000);
             conn.setConnectTimeout(15000);
-            conn.setRequestMethod("POST");
             conn.setDoInput(true);
             conn.setDoOutput(true);
-
             OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
             wr.write(data);
             wr.flush();
@@ -136,6 +131,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
 
+
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> arg0, View view, int i, long l) {
+        int index = arg0.getSelectedItemPosition();
+        Toast.makeText(getBaseContext(),"Hello item selected"+ groups.get(index), Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> adapterView) {
 
     }
 
@@ -174,17 +180,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Log.i(TAG, " length==" + jsonArray.length());
 
                 int i = 0;
+                for (i=0;i<jsonArray.length();i++){
+                    groups.add(i,jsonArray.getString(i));
+                }
 
-                String l1 = jsonArray.getString(0);
-                groups.add(i++, l1);
-                String l2 = jsonArray.getString(1);
-                groups.add(i++, l2);
-                String l3 = jsonArray.getString(2);
-                groups.add(i++, l3);
-                String l4 = jsonArray.getString(3);
-                groups.add(i++, l4);
-                String l5 = jsonArray.getString(4);
-                groups.add(i++, l5);
             } catch (Exception e) {
                 Log.e("eroor22", "aaya", e);
             }
@@ -192,4 +191,5 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 }
+
 
